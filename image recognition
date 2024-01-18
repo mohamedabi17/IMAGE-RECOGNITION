@@ -1,0 +1,721 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "568352d4",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-01-18T20:57:15.046118Z",
+     "iopub.status.busy": "2024-01-18T20:57:15.045720Z",
+     "iopub.status.idle": "2024-01-18T20:57:15.480135Z",
+     "shell.execute_reply": "2024-01-18T20:57:15.478904Z"
+    },
+    "papermill": {
+     "duration": 0.444474,
+     "end_time": "2024-01-18T20:57:15.483166",
+     "exception": false,
+     "start_time": "2024-01-18T20:57:15.038692",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+    "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+    "# For example, here's several helpful packages to load\n",
+    "\n",
+    "import numpy as np # linear algebra\n",
+    "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+    "\n",
+    "# Input data files are available in the read-only \"../input/\" directory\n",
+    "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+    "\n",
+    "import os\n",
+    "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+    "    for filename in filenames:\n",
+    "        print(os.path.join(dirname, filename))\n",
+    "\n",
+    "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\" \n",
+    "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "7e511451",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T20:57:15.495295Z",
+     "iopub.status.busy": "2024-01-18T20:57:15.494760Z",
+     "iopub.status.idle": "2024-01-18T20:57:30.275113Z",
+     "shell.execute_reply": "2024-01-18T20:57:30.273875Z"
+    },
+    "papermill": {
+     "duration": 14.78951,
+     "end_time": "2024-01-18T20:57:30.277899",
+     "exception": false,
+     "start_time": "2024-01-18T20:57:15.488389",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Import des bibliothèques nécessaires\n",
+    "import numpy as np\n",
+    "from sklearn.neighbors import KNeighborsClassifier\n",
+    "from tensorflow.keras.models import Sequential\n",
+    "from tensorflow.keras.layers import Dense, Flatten\n",
+    "from tensorflow.keras.datasets import mnist\n",
+    "from sklearn.metrics import accuracy_score"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "3403ccd2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T20:57:30.289619Z",
+     "iopub.status.busy": "2024-01-18T20:57:30.288878Z",
+     "iopub.status.idle": "2024-01-18T20:57:31.958536Z",
+     "shell.execute_reply": "2024-01-18T20:57:31.957440Z"
+    },
+    "papermill": {
+     "duration": 1.678686,
+     "end_time": "2024-01-18T20:57:31.961619",
+     "exception": false,
+     "start_time": "2024-01-18T20:57:30.282933",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz\n",
+      "11490434/11490434 [==============================] - 1s 0us/step\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Chargement de l'ensemble de données MNIST\n",
+    "(x_train, y_train), (x_test, y_test) = mnist.load_data()\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "18de8ccb",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T20:57:31.977940Z",
+     "iopub.status.busy": "2024-01-18T20:57:31.977494Z",
+     "iopub.status.idle": "2024-01-18T20:57:32.083036Z",
+     "shell.execute_reply": "2024-01-18T20:57:32.081985Z"
+    },
+    "papermill": {
+     "duration": 0.116655,
+     "end_time": "2024-01-18T20:57:32.085717",
+     "exception": false,
+     "start_time": "2024-01-18T20:57:31.969062",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Prétraitement des images\n",
+    "x_train = x_train.astype('float32') / 255.0\n",
+    "x_test = x_test.astype('float32') / 255.0\n",
+    "x_train_flat = x_train.reshape((x_train.shape[0], -1))\n",
+    "x_test_flat = x_test.reshape((x_test.shape[0], -1))\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "a5636076",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T20:57:32.101501Z",
+     "iopub.status.busy": "2024-01-18T20:57:32.101093Z",
+     "iopub.status.idle": "2024-01-18T21:03:12.883664Z",
+     "shell.execute_reply": "2024-01-18T21:03:12.882237Z"
+    },
+    "papermill": {
+     "duration": 340.793895,
+     "end_time": "2024-01-18T21:03:12.886511",
+     "exception": false,
+     "start_time": "2024-01-18T20:57:32.092616",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "from sklearn.svm import SVC\n",
+    "\n",
+    "# Ajustement des paramètres du SVM\n",
+    "svm_model = SVC(kernel='linear', C=1.0)\n",
+    "svm_model.fit(x_train_flat, y_train)\n",
+    "svm_predictions = svm_model.predict(x_test_flat)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "387d1f9c",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:03:12.902862Z",
+     "iopub.status.busy": "2024-01-18T21:03:12.902434Z",
+     "iopub.status.idle": "2024-01-18T21:03:13.074505Z",
+     "shell.execute_reply": "2024-01-18T21:03:13.073257Z"
+    },
+    "papermill": {
+     "duration": 0.183573,
+     "end_time": "2024-01-18T21:03:13.077259",
+     "exception": false,
+     "start_time": "2024-01-18T21:03:12.893686",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Définition du modèle du réseau de neurones\n",
+    "model = Sequential()\n",
+    "model.add(Flatten(input_shape=(28, 28)))  # Ajuster en fonction de la taille de vos images\n",
+    "model.add(Dense(128, activation='relu'))\n",
+    "model.add(Dense(10, activation='softmax'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "1880b9a2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:03:13.093077Z",
+     "iopub.status.busy": "2024-01-18T21:03:13.092679Z",
+     "iopub.status.idle": "2024-01-18T21:11:59.399966Z",
+     "shell.execute_reply": "2024-01-18T21:11:59.398701Z"
+    },
+    "papermill": {
+     "duration": 526.31802,
+     "end_time": "2024-01-18T21:11:59.402330",
+     "exception": false,
+     "start_time": "2024-01-18T21:03:13.084310",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.2829 - accuracy: 0.9183 - val_loss: 0.1592 - val_accuracy: 0.9558\n",
+      "Epoch 2/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.1294 - accuracy: 0.9620 - val_loss: 0.1225 - val_accuracy: 0.9630\n",
+      "Epoch 3/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0874 - accuracy: 0.9742 - val_loss: 0.1079 - val_accuracy: 0.9697\n",
+      "Epoch 4/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0660 - accuracy: 0.9809 - val_loss: 0.0920 - val_accuracy: 0.9731\n",
+      "Epoch 5/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0499 - accuracy: 0.9850 - val_loss: 0.0887 - val_accuracy: 0.9751\n",
+      "Epoch 6/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0401 - accuracy: 0.9877 - val_loss: 0.0874 - val_accuracy: 0.9747\n",
+      "Epoch 7/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0308 - accuracy: 0.9906 - val_loss: 0.0873 - val_accuracy: 0.9748\n",
+      "Epoch 8/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0253 - accuracy: 0.9922 - val_loss: 0.1037 - val_accuracy: 0.9715\n",
+      "Epoch 9/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0203 - accuracy: 0.9939 - val_loss: 0.0892 - val_accuracy: 0.9763\n",
+      "Epoch 10/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0163 - accuracy: 0.9950 - val_loss: 0.0922 - val_accuracy: 0.9759\n",
+      "Epoch 11/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0138 - accuracy: 0.9962 - val_loss: 0.1046 - val_accuracy: 0.9747\n",
+      "Epoch 12/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0107 - accuracy: 0.9970 - val_loss: 0.1054 - val_accuracy: 0.9734\n",
+      "Epoch 13/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.0111 - accuracy: 0.9965 - val_loss: 0.1076 - val_accuracy: 0.9755\n",
+      "Epoch 14/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.0076 - accuracy: 0.9979 - val_loss: 0.1121 - val_accuracy: 0.9737\n",
+      "Epoch 15/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0103 - accuracy: 0.9966 - val_loss: 0.1061 - val_accuracy: 0.9761\n",
+      "Epoch 16/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.0056 - accuracy: 0.9985 - val_loss: 0.1095 - val_accuracy: 0.9769\n",
+      "Epoch 17/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0077 - accuracy: 0.9975 - val_loss: 0.1182 - val_accuracy: 0.9762\n",
+      "Epoch 18/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.0063 - accuracy: 0.9981 - val_loss: 0.1060 - val_accuracy: 0.9779\n",
+      "Epoch 19/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0023 - accuracy: 0.9996 - val_loss: 0.1213 - val_accuracy: 0.9768\n",
+      "Epoch 20/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0085 - accuracy: 0.9969 - val_loss: 0.1231 - val_accuracy: 0.9757\n",
+      "Epoch 21/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0044 - accuracy: 0.9987 - val_loss: 0.1439 - val_accuracy: 0.9737\n",
+      "Epoch 22/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0055 - accuracy: 0.9982 - val_loss: 0.1302 - val_accuracy: 0.9749\n",
+      "Epoch 23/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0053 - accuracy: 0.9984 - val_loss: 0.1331 - val_accuracy: 0.9756\n",
+      "Epoch 24/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0046 - accuracy: 0.9987 - val_loss: 0.1372 - val_accuracy: 0.9771\n",
+      "Epoch 25/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0048 - accuracy: 0.9986 - val_loss: 0.1324 - val_accuracy: 0.9769\n",
+      "Epoch 26/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0015 - accuracy: 0.9997 - val_loss: 0.1223 - val_accuracy: 0.9781\n",
+      "Epoch 27/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0041 - accuracy: 0.9987 - val_loss: 0.1398 - val_accuracy: 0.9764\n",
+      "Epoch 28/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0047 - accuracy: 0.9983 - val_loss: 0.1393 - val_accuracy: 0.9776\n",
+      "Epoch 29/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0010 - accuracy: 0.9998 - val_loss: 0.1275 - val_accuracy: 0.9789\n",
+      "Epoch 30/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0069 - accuracy: 0.9976 - val_loss: 0.1467 - val_accuracy: 0.9778\n",
+      "Epoch 31/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0029 - accuracy: 0.9992 - val_loss: 0.1533 - val_accuracy: 0.9766\n",
+      "Epoch 32/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0031 - accuracy: 0.9991 - val_loss: 0.1663 - val_accuracy: 0.9743\n",
+      "Epoch 33/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0049 - accuracy: 0.9985 - val_loss: 0.1441 - val_accuracy: 0.9778\n",
+      "Epoch 34/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0024 - accuracy: 0.9992 - val_loss: 0.1430 - val_accuracy: 0.9765\n",
+      "Epoch 35/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0030 - accuracy: 0.9989 - val_loss: 0.1586 - val_accuracy: 0.9778\n",
+      "Epoch 36/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0047 - accuracy: 0.9986 - val_loss: 0.1544 - val_accuracy: 0.9759\n",
+      "Epoch 37/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 5.1013e-04 - accuracy: 1.0000 - val_loss: 0.1410 - val_accuracy: 0.9793\n",
+      "Epoch 38/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 8.7682e-05 - accuracy: 1.0000 - val_loss: 0.1395 - val_accuracy: 0.9793\n",
+      "Epoch 39/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 5.1461e-05 - accuracy: 1.0000 - val_loss: 0.1397 - val_accuracy: 0.9797\n",
+      "Epoch 40/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0074 - accuracy: 0.9977 - val_loss: 0.1701 - val_accuracy: 0.9770\n",
+      "Epoch 41/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0025 - accuracy: 0.9993 - val_loss: 0.1567 - val_accuracy: 0.9783\n",
+      "Epoch 42/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0045 - accuracy: 0.9984 - val_loss: 0.1813 - val_accuracy: 0.9748\n",
+      "Epoch 43/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0034 - accuracy: 0.9987 - val_loss: 0.1942 - val_accuracy: 0.9716\n",
+      "Epoch 44/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0030 - accuracy: 0.9992 - val_loss: 0.1642 - val_accuracy: 0.9781\n",
+      "Epoch 45/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0013 - accuracy: 0.9996 - val_loss: 0.2030 - val_accuracy: 0.9744\n",
+      "Epoch 46/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0051 - accuracy: 0.9983 - val_loss: 0.1858 - val_accuracy: 0.9765\n",
+      "Epoch 47/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0014 - accuracy: 0.9997 - val_loss: 0.1769 - val_accuracy: 0.9776\n",
+      "Epoch 48/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0030 - accuracy: 0.9989 - val_loss: 0.1978 - val_accuracy: 0.9757\n",
+      "Epoch 49/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0030 - accuracy: 0.9989 - val_loss: 0.2045 - val_accuracy: 0.9737\n",
+      "Epoch 50/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0013 - accuracy: 0.9996 - val_loss: 0.1766 - val_accuracy: 0.9795\n",
+      "Epoch 51/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 1.2485e-04 - accuracy: 1.0000 - val_loss: 0.1720 - val_accuracy: 0.9790\n",
+      "Epoch 52/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 2.9558e-05 - accuracy: 1.0000 - val_loss: 0.1716 - val_accuracy: 0.9791\n",
+      "Epoch 53/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 1.5811e-05 - accuracy: 1.0000 - val_loss: 0.1714 - val_accuracy: 0.9792\n",
+      "Epoch 54/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 1.0518e-05 - accuracy: 1.0000 - val_loss: 0.1706 - val_accuracy: 0.9794\n",
+      "Epoch 55/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0049 - accuracy: 0.9988 - val_loss: 0.2113 - val_accuracy: 0.9743\n",
+      "Epoch 56/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0054 - accuracy: 0.9982 - val_loss: 0.2016 - val_accuracy: 0.9757\n",
+      "Epoch 57/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0020 - accuracy: 0.9992 - val_loss: 0.1930 - val_accuracy: 0.9772\n",
+      "Epoch 58/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0024 - accuracy: 0.9991 - val_loss: 0.1914 - val_accuracy: 0.9762\n",
+      "Epoch 59/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0018 - accuracy: 0.9994 - val_loss: 0.1770 - val_accuracy: 0.9787\n",
+      "Epoch 60/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0021 - accuracy: 0.9994 - val_loss: 0.2230 - val_accuracy: 0.9737\n",
+      "Epoch 61/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0041 - accuracy: 0.9989 - val_loss: 0.2033 - val_accuracy: 0.9772\n",
+      "Epoch 62/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0013 - accuracy: 0.9995 - val_loss: 0.2062 - val_accuracy: 0.9767\n",
+      "Epoch 63/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0041 - accuracy: 0.9986 - val_loss: 0.2061 - val_accuracy: 0.9763\n",
+      "Epoch 64/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 9.3716e-04 - accuracy: 0.9998 - val_loss: 0.1844 - val_accuracy: 0.9798\n",
+      "Epoch 65/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0037 - accuracy: 0.9987 - val_loss: 0.2021 - val_accuracy: 0.9764\n",
+      "Epoch 66/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0031 - accuracy: 0.9991 - val_loss: 0.2016 - val_accuracy: 0.9766\n",
+      "Epoch 67/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0021 - accuracy: 0.9992 - val_loss: 0.2009 - val_accuracy: 0.9772\n",
+      "Epoch 68/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0025 - accuracy: 0.9991 - val_loss: 0.1955 - val_accuracy: 0.9760\n",
+      "Epoch 69/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0016 - accuracy: 0.9994 - val_loss: 0.2199 - val_accuracy: 0.9749\n",
+      "Epoch 70/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0015 - accuracy: 0.9996 - val_loss: 0.1941 - val_accuracy: 0.9799\n",
+      "Epoch 71/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 6.1552e-05 - accuracy: 1.0000 - val_loss: 0.1888 - val_accuracy: 0.9805\n",
+      "Epoch 72/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0031 - accuracy: 0.9991 - val_loss: 0.2157 - val_accuracy: 0.9768\n",
+      "Epoch 73/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0029 - accuracy: 0.9990 - val_loss: 0.2214 - val_accuracy: 0.9759\n",
+      "Epoch 74/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0020 - accuracy: 0.9994 - val_loss: 0.2000 - val_accuracy: 0.9787\n",
+      "Epoch 75/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0026 - accuracy: 0.9992 - val_loss: 0.2195 - val_accuracy: 0.9769\n",
+      "Epoch 76/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0012 - accuracy: 0.9996 - val_loss: 0.2077 - val_accuracy: 0.9789\n",
+      "Epoch 77/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0027 - accuracy: 0.9992 - val_loss: 0.2262 - val_accuracy: 0.9760\n",
+      "Epoch 78/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0015 - accuracy: 0.9996 - val_loss: 0.2699 - val_accuracy: 0.9743\n",
+      "Epoch 79/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0027 - accuracy: 0.9992 - val_loss: 0.2151 - val_accuracy: 0.9796\n",
+      "Epoch 80/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 3.1723e-04 - accuracy: 0.9999 - val_loss: 0.2277 - val_accuracy: 0.9780\n",
+      "Epoch 81/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0024 - accuracy: 0.9994 - val_loss: 0.2533 - val_accuracy: 0.9735\n",
+      "Epoch 82/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0041 - accuracy: 0.9988 - val_loss: 0.2250 - val_accuracy: 0.9781\n",
+      "Epoch 83/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 3.1926e-04 - accuracy: 0.9999 - val_loss: 0.2149 - val_accuracy: 0.9800\n",
+      "Epoch 84/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0023 - accuracy: 0.9996 - val_loss: 0.2896 - val_accuracy: 0.9717\n",
+      "Epoch 85/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0036 - accuracy: 0.9990 - val_loss: 0.2236 - val_accuracy: 0.9787\n",
+      "Epoch 86/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 5.5824e-05 - accuracy: 1.0000 - val_loss: 0.2178 - val_accuracy: 0.9799\n",
+      "Epoch 87/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 1.4578e-05 - accuracy: 1.0000 - val_loss: 0.2153 - val_accuracy: 0.9803\n",
+      "Epoch 88/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 6.1051e-06 - accuracy: 1.0000 - val_loss: 0.2155 - val_accuracy: 0.9800\n",
+      "Epoch 89/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 3.8341e-06 - accuracy: 1.0000 - val_loss: 0.2147 - val_accuracy: 0.9800\n",
+      "Epoch 90/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 2.6273e-06 - accuracy: 1.0000 - val_loss: 0.2157 - val_accuracy: 0.9803\n",
+      "Epoch 91/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 1.8031e-06 - accuracy: 1.0000 - val_loss: 0.2150 - val_accuracy: 0.9803\n",
+      "Epoch 92/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 1.1263e-06 - accuracy: 1.0000 - val_loss: 0.2166 - val_accuracy: 0.9804\n",
+      "Epoch 93/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 8.0969e-07 - accuracy: 1.0000 - val_loss: 0.2158 - val_accuracy: 0.9805\n",
+      "Epoch 94/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0057 - accuracy: 0.9984 - val_loss: 0.2524 - val_accuracy: 0.9768\n",
+      "Epoch 95/100\n",
+      "1500/1500 [==============================] - 6s 4ms/step - loss: 0.0013 - accuracy: 0.9996 - val_loss: 0.2895 - val_accuracy: 0.9737\n",
+      "Epoch 96/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0018 - accuracy: 0.9994 - val_loss: 0.2546 - val_accuracy: 0.9768\n",
+      "Epoch 97/100\n",
+      "1500/1500 [==============================] - 5s 4ms/step - loss: 0.0016 - accuracy: 0.9996 - val_loss: 0.2568 - val_accuracy: 0.9769\n",
+      "Epoch 98/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0024 - accuracy: 0.9994 - val_loss: 0.2543 - val_accuracy: 0.9767\n",
+      "Epoch 99/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0017 - accuracy: 0.9994 - val_loss: 0.2566 - val_accuracy: 0.9781\n",
+      "Epoch 100/100\n",
+      "1500/1500 [==============================] - 5s 3ms/step - loss: 0.0011 - accuracy: 0.9997 - val_loss: 0.2378 - val_accuracy: 0.9782\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<keras.src.callbacks.History at 0x7f2906da4c40>"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Compilation et entraînement du modèle de réseau de neurones\n",
+    "model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])\n",
+    "model.fit(x_train, y_train, epochs=100, batch_size=32, validation_split=0.2)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "f7ab7152",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:01.175231Z",
+     "iopub.status.busy": "2024-01-18T21:12:01.174618Z",
+     "iopub.status.idle": "2024-01-18T21:12:02.022587Z",
+     "shell.execute_reply": "2024-01-18T21:12:02.021322Z"
+    },
+    "papermill": {
+     "duration": 1.734497,
+     "end_time": "2024-01-18T21:12:02.025485",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:00.290988",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "313/313 [==============================] - 1s 2ms/step\n",
+      "[7 2 1 ... 4 5 6]\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Prédictions du réseau de neurones sur l'ensemble de test\n",
+    "nn_predictions = np.argmax(model.predict(x_test), axis=1)\n",
+    "print(nn_predictions)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "85db15b2",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:03.912750Z",
+     "iopub.status.busy": "2024-01-18T21:12:03.912338Z",
+     "iopub.status.idle": "2024-01-18T21:12:03.949605Z",
+     "shell.execute_reply": "2024-01-18T21:12:03.948541Z"
+    },
+    "papermill": {
+     "duration": 0.969804,
+     "end_time": "2024-01-18T21:12:03.952083",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:02.982279",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: \"▸\";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: \"▾\";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: \"\";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: \"\";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>KNeighborsClassifier()</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item\"><div class=\"sk-estimator sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" checked><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label sk-toggleable__label-arrow\">KNeighborsClassifier</label><div class=\"sk-toggleable__content\"><pre>KNeighborsClassifier()</pre></div></div></div></div></div>"
+      ],
+      "text/plain": [
+       "KNeighborsClassifier()"
+      ]
+     },
+     "execution_count": 9,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Mise en place de k-NN\n",
+    "knn_model = KNeighborsClassifier(n_neighbors=5)  # Ajuster la valeur de 'k' selon vos besoins\n",
+    "knn_model.fit(x_train_flat, y_train)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "1849eac0",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:05.801482Z",
+     "iopub.status.busy": "2024-01-18T21:12:05.801064Z",
+     "iopub.status.idle": "2024-01-18T21:12:23.395124Z",
+     "shell.execute_reply": "2024-01-18T21:12:23.394019Z"
+    },
+    "papermill": {
+     "duration": 18.55282,
+     "end_time": "2024-01-18T21:12:23.397773",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:04.844953",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Prédictions de k-NN sur l'ensemble de test\n",
+    "knn_predictions = knn_model.predict(x_test_flat)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "8f32926b",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:25.198392Z",
+     "iopub.status.busy": "2024-01-18T21:12:25.198013Z",
+     "iopub.status.idle": "2024-01-18T21:12:25.203385Z",
+     "shell.execute_reply": "2024-01-18T21:12:25.202297Z"
+    },
+    "papermill": {
+     "duration": 0.907843,
+     "end_time": "2024-01-18T21:12:25.205476",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:24.297633",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Combinaison des prédictions (vote majoritaire)\n",
+    "hybrid_predictions = np.argmin(np.vstack((nn_predictions, knn_predictions)), axis=0)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "97b1c644",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:27.050983Z",
+     "iopub.status.busy": "2024-01-18T21:12:27.050275Z",
+     "iopub.status.idle": "2024-01-18T21:12:27.058870Z",
+     "shell.execute_reply": "2024-01-18T21:12:27.058031Z"
+    },
+    "papermill": {
+     "duration": 0.897119,
+     "end_time": "2024-01-18T21:12:27.061160",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:26.164041",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Évaluation des performances\n",
+    "nn_accuracy = accuracy_score(y_test, nn_predictions)\n",
+    "knn_accuracy = accuracy_score(y_test, knn_predictions)\n",
+    "hybrid_accuracy = accuracy_score(y_test, hybrid_predictions)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "93d023e1",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:28.909084Z",
+     "iopub.status.busy": "2024-01-18T21:12:28.907624Z",
+     "iopub.status.idle": "2024-01-18T21:12:28.913804Z",
+     "shell.execute_reply": "2024-01-18T21:12:28.912963Z"
+    },
+    "papermill": {
+     "duration": 0.967848,
+     "end_time": "2024-01-18T21:12:28.916452",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:27.948604",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Neural Network Accuracy: 0.9781\n",
+      "K-NN Accuracy: 0.9688\n",
+      "Hybrid Model Accuracy: 0.0985\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Affichage des résultats\n",
+    "print(f\"Neural Network Accuracy: {nn_accuracy}\")\n",
+    "print(f\"K-NN Accuracy: {knn_accuracy}\")\n",
+    "print(f\"Hybrid Model Accuracy: {hybrid_accuracy}\")\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "b839bdf6",
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2024-01-18T21:12:30.760010Z",
+     "iopub.status.busy": "2024-01-18T21:12:30.759365Z",
+     "iopub.status.idle": "2024-01-18T21:12:30.767083Z",
+     "shell.execute_reply": "2024-01-18T21:12:30.765810Z"
+    },
+    "papermill": {
+     "duration": 0.974656,
+     "end_time": "2024-01-18T21:12:30.769312",
+     "exception": false,
+     "start_time": "2024-01-18T21:12:29.794656",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Hybrid Model (with SVM) Accuracy: 0.0984\n"
+     ]
+    }
+   ],
+   "source": [
+    "\n",
+    "hybrid_predictions_svm = np.argmin(np.vstack((nn_predictions, svm_predictions)), axis=0)\n",
+    "\n",
+    "# Évaluation des performances du modèle hybride avec SVM\n",
+    "hybrid_accuracy_svm = accuracy_score(y_test, hybrid_predictions_svm)\n",
+    "print(f\"Hybrid Model (with SVM) Accuracy: {hybrid_accuracy_svm}\")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [],
+   "dockerImageVersionId": 30635,
+   "isGpuEnabled": false,
+   "isInternetEnabled": true,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 921.824595,
+   "end_time": "2024-01-18T21:12:33.310660",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-01-18T20:57:11.486065",
+   "version": "2.4.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
